@@ -22,19 +22,19 @@ TaskList.addEventListener("click", (event) => {
 // finish
 
 // Add new task to list item
-function addTask() {
+async function addTask() {
   const taskText = NewTaskInput.value.trim();
   if (taskText) {
-    const listItem = document.createElement("li");
-    listItem.innerHTML = `
-     <input type="checkbox" />
-            <span>${taskText}</span>
-            <button class="delete-task">X</button>`;
-    TaskList.appendChild(listItem);
+    const response = await fetch("/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: taskText }),
+    });
+    const newTask = await response.json();
     NewTaskInput.value = "";
+    fetchTasks();
   }
 }
-// finish
 
 AddTaskButton.addEventListener("click", addTask);
 
@@ -44,3 +44,21 @@ NewTaskInput.addEventListener("keydown", (event) => {
     addTask();
   }
 });
+
+async function fetchTasks() {
+  const response = await fetch("/tasks");
+  const tasks = await response.json();
+  TaskList.innerHTML = tasks
+    .map(
+      (task) => `
+    <li data-id="${task.id}">
+      <input type="checkbox" ${task.completed ? "checked" : ""} />
+      <span>${task.text}</span>
+      <button class="delete-task">X</button>
+    </li>
+  `
+    )
+    .join("");
+}
+
+fetchTasks();
